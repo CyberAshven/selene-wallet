@@ -1,0 +1,54 @@
+# Logs 
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# This contains secrets, don't store in source control
+.env
+
+# Claude Code
+.claude
+
+# Editor directories and files
+.vscode
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Capacitor / Native outputs
+App/output
+android/app/release
+android/app/capacitor.build.gradle
+android/capacitor.settings.gradle
+ios/App/App.ipa
+ios/App/App.*.zip
+
+# fastlane
+**/fastlane/screenshots
+**/fastlane/Preview.html
+**/fastlane/report.xml
+**/fastlane/test_output
+
+# ios artifacts
+*.xcuserdata
+**/xcuserdata/
+
+# Playwright
+playwright-report/
+test-results/
+.env.e2e

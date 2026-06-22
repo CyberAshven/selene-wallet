@@ -1,0 +1,26 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "tsconfig.e2e.json"
+  },
+  "plugins": ["@typescript-eslint", "playwright"],
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "plugin:playwright/recommended"
+  ],
+  "rules": {
+    "playwright/no-force-option": "error",
+    "playwright/no-wait-for-timeout": "error",
+    "playwright/prefer-web-first-assertions": "error",
+    "playwright/no-raw-locators": "warn",
+    "playwright/prefer-to-be": "warn",
+    "playwright/prefer-to-have-count": "warn",
+    "playwright/prefer-to-have-length": "warn",
+    "@typescript-eslint/no-unused-vars": ["error", { "caughtErrors": "none" }],
+    "@typescript-eslint/no-floating-promises": "error",
+    "eqeqeq": ["error", "always"]
+  }
+}

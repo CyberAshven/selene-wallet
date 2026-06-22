@@ -1,0 +1,84 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for Selene Wallet desktop",
+  "platforms": ["linux", "macOS", "windows"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+
+    "fs:allow-read-file",
+    "fs:allow-read-text-file",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-mkdir",
+    "fs:allow-remove",
+    "fs:allow-read-dir",
+    "fs:allow-rename",
+    "fs:allow-exists",
+    "fs:allow-stat",
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-rename",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [{ "path": "$APPLOCALDATA/selene/**" }, { "path": "$APPCACHE/selene/**" }]
+    },
+
+    "keyring:allow-get-password",
+    "keyring:allow-set-password",
+    "keyring:allow-delete-password",
+
+    "biometry:allow-authenticate",
+    "biometry:allow-status",
+    {
+      "identifier": "biometry:allow-set-data",
+      "allow": [{ "domain": "cash.selene.app" }]
+    },
+    {
+      "identifier": "biometry:allow-get-data",
+      "allow": [{ "domain": "cash.selene.app" }]
+    },
+    {
+      "identifier": "biometry:allow-has-data",
+      "allow": [{ "domain": "cash.selene.app" }]
+    },
+    {
+      "identifier": "biometry:allow-remove-data",
+      "allow": [{ "domain": "cash.selene.app" }]
+    }
+  ]
+}

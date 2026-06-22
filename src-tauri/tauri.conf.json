@@ -1,0 +1,38 @@
+{
+  "productName": "Selene Wallet",
+  "version": "2026.3.8",
+  "identifier": "cash.selene.app",
+  "build": {
+    "beforeDevCommand": "pnpm vite --config vite.desktop.config.js --host",
+    "beforeBuildCommand": "pnpm vite build --config vite.desktop.config.js",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Selene Wallet",
+        "width": 390,
+        "height": 844,
+        "minWidth": 360,
+        "minHeight": 700,
+        "center": true,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' tauri:; script-src 'self' 'wasm-unsafe-eval' tauri: https://www.youtube.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' tauri:; img-src 'self' data: blob: https: tauri:; connect-src 'self' wss: https: tauri: ipc: http://ipc.localhost; frame-src https://www.youtube.com; font-src 'self' tauri:; object-src 'none'; base-uri 'self'; form-action 'self';"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "deb", "appimage", "dmg"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

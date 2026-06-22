@@ -1,0 +1,51 @@
+import { assets, explore, settings } from "@/translations/common";
+
+const translations = {
+  // Imported from common
+  explore,
+  settings,
+  assets,
+
+  wallet: {
+    ar: "محفظة",
+    bn: "ওয়ালেট",
+    cy: "Waled",
+    da: "Tegnebog",
+    de: "Brieftasche",
+    el: "Πορτοφόλι",
+    en: "Wallet",
+    es: "Cartera",
+    fa: "کیف پول",
+    fil: "Wallet",
+    fr: "Portefeuille",
+    ha: "Wallet",
+    hi: "बटुआ",
+    id: "Dompet",
+    it: "Portafoglio",
+    ja: "ウォレット",
+    jv: "Wallet",
+    ko: "지갑",
+    mr: "वॉलेट",
+    ms: "Dompet",
+    nb: "Lommebok",
+    nl: "Portemonnee",
+    pa: "ਵਾਲਟ",
+    pl: "Portfel",
+    pt: "Carteira",
+    ro: "Portofel",
+    ru: "Кошелек",
+    sv: "Plånbok",
+    sw: "Mkoba",
+    ta: "பணப் பை",
+    te: "వాలెట్",
+    th: "กระเป๋าสตางค์",
+    tr: "Cüzdan",
+    uk: "Гаманець",
+    ur: "والٹ",
+    vi: "Ví",
+    zh: "钱包",
+    zh_TW: "Wallet",
+  },
+};
+
+export default translations;

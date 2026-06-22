@@ -1,0 +1,353 @@
+# Selene Wallet CI/CD Pipeline
+#
+# Runners:
+#   - Docker (default): build, test, deploy_web, deploy_gitlab_release
+#   - macOS (tag: macos): package_android, package_ios, deploy_*_release
+#
+# Branches:
+#   - main: full pipeline (build → test → package → deploy)
+#   - edge: build → test → debug APK → edge deploy
+#   - testflight: build → package → store upload
+
+stages:
+  - build
+  - test
+  - package
+  - screenshots
+  - release
+
+default:
+  before_script:
+    - "export LC_ALL=en_US.UTF-8"
+    - "export LANG=en_US.UTF-8"
+    - 'export SELENE_VERSION=$(grep -o ''"version": *"[^"]*"'' package.json | sed -e ''s/"version": *"//'' -e ''s/"$//'')'
+    - 'echo "SELENE_VERSION=$SELENE_VERSION"'
+
+# ----------------------------------------------------------------
+# Build
+# ----------------------------------------------------------------
+
+build_web:
+  stage: build
+  image: node:lts-alpine
+  script:
+    - "which git || (apk update && apk add git)"
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+    - pnpm test 2>&1 | tail -50
+    - pnpm run build:ci
+  artifacts:
+    paths:
+      - "dist/"
+      - "package.json"
+      - "pnpm-lock.yaml"
+
+# ----------------------------------------------------------------
+# Test
+# ----------------------------------------------------------------
+
+test_e2e:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.58.2-noble
+  dependencies:
+    - build_web
+  script:
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+    - npx playwright test
+  artifacts:
+    when: on_failure
+    paths:
+      - playwright-report/
+    exclude:
+      - playwright-report/**/*.png
+      - playwright-report/**/*.zip
+    expire_in: 7 days
+
+# ----------------------------------------------------------------
+# Android Packaging
+# ----------------------------------------------------------------
+
+package_android:
+  stage: package
+  dependencies:
+    - build_web
+  script:
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+    - npx cap sync android
+    - cd android/
+    - ./gradlew clean bundleRelease assembleRelease
+        -Pandroid.injected.signing.store.file="$ANDROID_KEYSTORE"
+        -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD"
+        -Pandroid.injected.signing.key.alias=key0
+        -Pandroid.injected.signing.key.password="$ANDROID_KEYSTORE_PASSWORD"
+  artifacts:
+    paths:
+      - android/app/build/outputs/apk/release/app-release.apk
+      - android/app/build/outputs/bundle/release/app-release.aab
+    expire_in: 1 year
+  only:
+    - main
+    - testflight
+  tags:
+    - macos
+
+package_android_edge:
+  stage: package
+  dependencies:
+    - build_web
+  script:
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+    - npx cap sync android
+    - cd android/
+    - ./gradlew clean assembleDebug
+    - sha256sum app/build/outputs/apk/debug/app-debug.apk
+  artifacts:
+    paths:
+      - android/app/build/outputs/apk/debug/app-debug.apk
+  only:
+    - edge
+  tags:
+    - macos
+
+# ----------------------------------------------------------------
+# iOS Packaging
+# ----------------------------------------------------------------
+
+package_ios:
+  stage: package
+  dependencies:
+    - build_web
+  script:
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+    - npx cap sync ios
+    - cd ios/App/
+    - xcodebuild -project App.xcodeproj -scheme App
+        -configuration Release
+        -archivePath build/App.xcarchive
+        archive
+        -allowProvisioningUpdates
+        DEVELOPMENT_TEAM="M2M8ZMH23D"
+    - xcodebuild -exportArchive
+        -archivePath build/App.xcarchive
+        -exportOptionsPlist ../../scripts/export-options.plist
+        -exportPath build/
+        -allowProvisioningUpdates
+  artifacts:
+    paths:
+      - ios/App/build/App.ipa
+    expire_in: 1 year
+  only:
+    - main
+    - testflight
+  tags:
+    - macos
+
+# ----------------------------------------------------------------
+# Screenshots (for store listings)
+# ----------------------------------------------------------------
+
+screenshots:
+  stage: screenshots
+  image: mcr.microsoft.com/playwright:v1.58.2-noble
+  dependencies:
+    - build_web
+  script:
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+    - npx playwright test --project=screenshots
+  artifacts:
+    paths:
+      - android/metadata/android/en-US/images/phoneScreenshots/
+    expire_in: 1 year
+  only:
+    - main
+
+# ----------------------------------------------------------------
+# Android Deployment
+# ----------------------------------------------------------------
+
+deploy_android_edge:
+  stage: release
+  image: alpine:latest
+  needs:
+    - package_android_edge
+  dependencies:
+    - package_android_edge
+  script:
+    - "which ssh-agent || (apk update && apk add openssh)"
+    - "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+    - eval $(ssh-agent -s)
+    - echo "$SELENE_SSH_KEY_BASE64" | base64 -d | ssh-add - > /dev/null 2>&1
+    - echo "$SSH_KNOWN_HOSTS_BASE64" | base64 -d > ~/.ssh/known_hosts
+    - export SELENE_VERSION=$(grep -o 'versionName "[^"]*"' android/app/build.gradle | sed 's/versionName "//;s/"//')
+    - echo "Uploading selene-edge-v$SELENE_VERSION.apk"
+    - sha256sum android/app/build/outputs/apk/debug/app-debug.apk
+    - ssh selene@warpgate.selene.technology "mkdir -p /srv/www/selene.cash/public/download"
+    - scp android/app/build/outputs/apk/debug/app-debug.apk selene@warpgate.selene.technology:/srv/www/selene.cash/public/download/selene-edge-v$SELENE_VERSION.apk
+    - scp android/app/build/outputs/apk/debug/app-debug.apk selene@warpgate.selene.technology:/srv/www/selene.cash/public/download/selene-edge.apk
+    - echo ""
+    - echo "=== Edge APK deployed ==="
+    - echo "https://selene.cash/download/selene-edge-v$SELENE_VERSION.apk"
+    - echo "https://selene.cash/download/selene-edge.apk"
+  only:
+    - edge
+
+deploy_android_apk:
+  stage: release
+  image: alpine:latest
+  dependencies:
+    - package_android
+  script:
+    - "which ssh-agent || (apk update && apk add openssh coreutils)"
+    - "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+    - eval $(ssh-agent -s)
+    - echo "$SELENE_SSH_KEY_BASE64" | base64 -d | ssh-add - > /dev/null 2>&1
+    - echo "$SSH_KNOWN_HOSTS_BASE64" | base64 -d > ~/.ssh/known_hosts
+    - ssh selene@warpgate.selene.technology "mkdir -p /srv/www/selene.cash/public/download"
+    - echo "Uploading selene-v$SELENE_VERSION.apk"
+    - sha256sum android/app/build/outputs/apk/release/app-release.apk
+    - scp android/app/build/outputs/apk/release/app-release.apk selene@warpgate.selene.technology:/srv/www/selene.cash/public/download/selene-v$SELENE_VERSION.apk
+  only:
+    - main
+
+deploy_android_release:
+  stage: release
+  when: manual
+  allow_failure: true
+  dependencies:
+    - package_android
+    - screenshots
+  script:
+    - export SELENE_VERSION=$(node -p "require('./package.json').version")
+    - echo "SELENE_VERSION=$SELENE_VERSION"
+    - node scripts/upload-google-play.cjs
+        --aab android/app/build/outputs/bundle/release/app-release.aab
+        --track production
+        --changelog "$(ls -t android/metadata/android/en-US/changelogs/*.txt | head -1)"
+        --json-key "$ANDROID_JSON_KEY_FILE"
+  only:
+    - main
+  tags:
+    - macos
+
+# ----------------------------------------------------------------
+# iOS Deployment
+# ----------------------------------------------------------------
+
+deploy_ios_release:
+  stage: release
+  when: manual
+  allow_failure: true
+  dependencies:
+    - package_ios
+    - screenshots
+  script:
+    - mkdir -p ~/.appstoreconnect/private_keys
+    - echo "$APP_STORE_CONNECT_API_KEY" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+    - xcrun altool --upload-app
+        -f ios/App/build/App.ipa
+        -t ios
+        --apiKey "$APP_STORE_CONNECT_API_KEY_ID"
+        --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+  after_script:
+    - rm -f ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+  only:
+    - main
+  tags:
+    - macos
+
+deploy_ios_testflight:
+  stage: release
+  dependencies:
+    - package_ios
+  script:
+    - mkdir -p ~/.appstoreconnect/private_keys
+    - echo "$APP_STORE_CONNECT_API_KEY" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+    - xcrun altool --upload-app
+        -f ios/App/build/App.ipa
+        -t ios
+        --apiKey "$APP_STORE_CONNECT_API_KEY_ID"
+        --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+  after_script:
+    - rm -f ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+  only:
+    - testflight
+  tags:
+    - macos
+
+# ----------------------------------------------------------------
+# Web Deployment
+# ----------------------------------------------------------------
+
+deploy_web:
+  stage: release
+  image: alpine:latest
+  dependencies:
+    - build_web
+  script:
+    - "which ssh-agent || (apk update && apk add openssh)"
+    - "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+    - eval $(ssh-agent -s)
+    - echo "$SELENE_SSH_KEY_BASE64" | base64 -d | ssh-add - > /dev/null 2>&1
+    - echo "$SSH_KNOWN_HOSTS_BASE64" | base64 -d > ~/.ssh/known_hosts
+    - scp -r dist/* selene@warpgate.selene.technology:/srv/www/app.selene.cash/dist/
+  only:
+    - main
+
+deploy_web_edge:
+  stage: release
+  image: alpine:latest
+  needs:
+    - build_web
+  dependencies:
+    - build_web
+  script:
+    - "which ssh-agent || (apk update && apk add openssh)"
+    - "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+    - eval $(ssh-agent -s)
+    - echo "$SELENE_SSH_KEY_BASE64" | base64 -d | ssh-add - > /dev/null 2>&1
+    - echo "$SSH_KNOWN_HOSTS_BASE64" | base64 -d > ~/.ssh/known_hosts
+    - ssh selene@warpgate.selene.technology "mkdir -p /srv/www/edge.selene.cash/dist"
+    - scp -r dist/* selene@warpgate.selene.technology:/srv/www/edge.selene.cash/dist/
+  only:
+    - edge
+
+# ----------------------------------------------------------------
+# GitLab Release (creates tag + release for badge)
+# ----------------------------------------------------------------
+
+deploy_gitlab_release:
+  stage: release
+  image: alpine:latest
+  script:
+    - apk add git curl jq
+    - git fetch --tags --unshallow || git fetch --tags
+    - git config user.email "ci@selene.cash"
+    - git config user.name "Selene CI"
+    - |
+      if ! git rev-parse "$SELENE_VERSION" >/dev/null 2>&1; then
+        git tag -a "$SELENE_VERSION" -m "Version $SELENE_VERSION"
+        git push origin "$SELENE_VERSION"
+      else
+        echo "Tag $SELENE_VERSION already exists"
+      fi
+    - PREV_TAG=$(git tag --sort=-creatordate | grep -v "^$SELENE_VERSION$" | head -1 || true)
+    - |
+      if [ -n "$PREV_TAG" ]; then
+        CHANGELOG=$(git log "$PREV_TAG".."$SELENE_VERSION" --pretty=format:"- %s" --no-merges)
+      else
+        CHANGELOG="Initial release"
+      fi
+    - |
+      curl --fail --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --header "Content-Type: application/json" \
+        --data "$(jq -n --arg tag "$SELENE_VERSION" --arg name "v$SELENE_VERSION" --arg desc "$CHANGELOG" \
+          '{tag_name: $tag, name: $name, description: $desc}')" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases" \
+      || echo "Release creation failed (may already exist)"
+  only:
+    - main

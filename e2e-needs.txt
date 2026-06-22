@@ -1,0 +1,168 @@
+E2E TEST PLAN — organized by view, with user stories
+=====================================================
+
+Legend: [x] covered  [ ] needs test  [~] partial  [s] skip (native-only)
+
+## e2e/wallet-view.spec.ts [x]
+- [x] app boots to receive screen
+- [x] address displayed in valid cashaddr format
+- [x] QR code displayed
+- [x] receive tokens toggle updates address
+- [x] request amount shows input
+- [x] eyeball button toggles privacy mode
+- [x] tapping balance swaps currency display
+- [x] wallet name navigates to wallet settings
+- [x] history button navigates
+- [x] send button navigates
+
+## e2e/wallet-view-advanced.spec.ts [x] NEW
+- [x] long-press QR spawns focused QR overlay (skips in headless — pointer events)
+- [x] tapping balance with privacy mode active disables privacy mode
+- [x] sync indicator is visible
+
+## e2e/send.spec.ts [~]
+- [x] send page renders
+- [x] address input accessible
+- [x] back button works
+- [x] large amount shows error styling
+- [x] slide-to-send visible
+
+## e2e/send-advanced.spec.ts [x] NEW
+- [x] navigating with address shows Address component (not input)
+- [x] tapping displayed address re-opens edit mode
+- [x] MAX button fills maximum sendable amount
+- [x] scanner button opens scanner overlay
+
+## e2e/send-deeplink.spec.ts [x]
+- [x] deep-link with address prefills
+- [x] deep-link without address opens empty send
+
+## e2e/pay.spec.ts [~]
+- [x] pay page renders with request URL
+- [s] instant pay works if enabled (needs funded wallet)
+- [s] send works on pay page (needs valid invoice)
+
+## e2e/sweep.spec.ts [~]
+- [x] sweep page renders with WIF param
+- [s] instant sweep respects threshold (needs funded WIF)
+- [s] sweep sends funds (needs funded WIF)
+
+## e2e/history.spec.ts [x]
+- [x] history page renders
+- [x] shows Recent Transactions header
+- [x] search input visible and accepts text
+- [x] filter panel toggles
+- [x] filter panel has sort controls
+- [x] filter panel has direction radio buttons
+- [x] filter panel has token and NFT filters
+- [x] reset filters clears selections
+- [x] empty wallet shows empty state
+- [x] search with no results shows feedback
+
+## e2e/assets.spec.ts [~]
+- [x] assets page renders with tabs
+- [x] tokens tab navigates
+- [x] coins tab navigates
+
+## e2e/assets-coins.spec.ts [x] NEW
+- [x] coins tab renders with balance header or empty state
+- [x] tokens tab shows empty state for fresh wallet
+
+## e2e/explore.spec.ts [x]
+- [x] explore page renders
+- [x] explore tab visibility toggles from settings
+
+## e2e/settings.spec.ts [~]
+- [x] settings page renders
+- [x] has expected sections
+- [x] accordions expand and collapse
+- [x] network settings shows server selector
+- [x] currency settings shows denomination
+- [x] privacy settings has hide balance toggle
+
+## e2e/settings-currency.spec.ts [x] NEW
+- [x] denomination select changes between BCH/mBCH/bits/sats
+- [x] local currency select changes fiat currency
+- [x] prefer local currency toggle works
+
+## e2e/settings-network.spec.ts [x] NEW
+- [x] server select shows available servers
+- [x] add custom server form appears and validates input
+- [x] offline mode checkbox disables server select
+
+## e2e/settings-payment.spec.ts [x] NEW
+- [x] instant pay toggle shows limit input when enabled
+- [x] legacy payment format toggle works
+
+## e2e/settings-ui.spec.ts [x] NEW
+- [x] theme mode select cycles system/light/dark (with HTML class verification)
+- [x] display exchange rate toggle works
+- [x] display sync counter toggle works
+
+## e2e/settings-privacy.spec.ts [x] NEW
+- [x] hide balance checkbox toggles (with wallet view verification)
+- [x] send daily check-in checkbox toggles
+- [x] auto-resolve token metadata checkbox toggles
+
+## e2e/settings-intl.spec.ts [x] NEW
+- [x] language select shows available languages
+- [x] switching language updates UI text and restores
+
+## e2e/settings-qr.spec.ts [x] NEW
+- [x] QR logo select changes logo
+- [x] foreground color input works
+- [x] background color input works
+- [x] reset colors restores defaults
+
+## e2e/security.spec.ts [~]
+- [x] app boots without lock screen on web
+- [x] security accordion accessible
+- [x] web stub shows encryption unavailable
+- [s] forgot PIN (native only)
+- [s] nuclear wipe (native only)
+- [s] import backup (native only)
+
+## e2e/wallet-settings.spec.ts [x]
+- [x] page renders
+- [x] rename via blur
+- [x] rename via enter
+
+## e2e/wallet-wizard.spec.ts [x]
+- [x] wizard page renders
+- [x] import navigates to form
+- [x] import validates word count
+- [x] import validates BIP39 mnemonic
+- [ ] create new wallet generates mnemonic and builds
+- [ ] created wallet can be activated
+
+## e2e/scanner.spec.ts [~]
+- [x] scanner opens and closes
+- [s] scanner torch (native only)
+- [s] image select scan (native only)
+
+## e2e/credits.spec.ts [x]
+- [x] credits page shows version
+
+## e2e/chipnet.spec.ts [x] (env-gated)
+## e2e/mainnet-smoke.spec.ts [x] (env-gated)
+
+## e2e/vendor-mode.spec.ts [x] NEW
+- [x] vendor mode page renders with QR and numpad
+- [x] numpad enters digits and updates display
+- [x] clear button (C) resets amount
+- [x] exit hint text is visible
+
+## Lifecycle Tests [s] (native-only — require Capacitor native bridge)
+- [s] app boots to lock screen when AppOpen/PIN is configured
+- [s] PIN entry unlocks app and proceeds to wallet
+- [s] biometric unlock works when configured
+- [s] brute-force lockout after failed attempts
+- [s] forgot PIN → nuclear wipe flow
+- [s] app pause/resume re-locks when configured
+- [s] encryption key import/export via backup
+
+## e2e/explore-tx.spec.ts [ ] TODO
+- [ ] transaction detail page renders with valid tx structure
+- [ ] transaction ID is copyable
+- [ ] memo field is editable
+- [ ] input/output links navigate to other transactions

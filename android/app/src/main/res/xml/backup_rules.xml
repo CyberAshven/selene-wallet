@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (API 31+) backup rules -->
+<!-- Only include what we want backed up; everything else is excluded by default -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="SimpleEncryptionPrefs.xml"/>
+        <include domain="root" path="files/selene/wallets/"/>
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="SimpleEncryptionPrefs.xml"/>
+        <include domain="root" path="files/selene/wallets/"/>
+        <include domain="root" path="files/selene/db/"/>
+    </device-transfer>
+</data-extraction-rules>

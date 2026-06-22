@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 6-11 (API 23-30) backup rules -->
+<!-- Only include what we want backed up; everything else is excluded by default -->
+<full-backup-content>
+    <include domain="sharedpref" path="SimpleEncryptionPrefs.xml"/>
+    <include domain="root" path="files/selene/wallets/"/>
+</full-backup-content>

@@ -1,0 +1,7 @@
+- Encrypted wallet storage (AES-256-GCM) protecting data at rest
+- Vendor Mode: transforms your phone into a point-of-sale terminal
+- NFT detail viewer with full-screen display and swipe navigation
+- Smart address detection from pasted text
+- Focused QR view (long-press for full-screen + brightness boost)
+- Welsh language added
+- Bug fixes and improvements
