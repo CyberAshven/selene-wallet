@@ -1,0 +1,2 @@
+# The supply-chain scanner runs under bash on every OS, Git Bash included.
+.agents/skills/**/*.sh text eol=lf
