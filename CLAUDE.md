@@ -453,3 +453,20 @@ Always run `npm view @capacitor/plugin-name` first.
 - Security architecture, key management
 - Database migrations, app lifecycle
 - Major features, protocol implementations
+
+## Supply chain
+
+Read the `supply-chain-guard` skill (`.agents/skills/supply-chain-guard/`,
+linked from `.claude/skills/supply-chain-guard`) before cloning, checking
+out, installing, building or opening anything not written in the session.
+
+- `bash .agents/skills/supply-chain-guard/scan.sh . --staged` before every
+  commit, and `scan.sh . HEAD` before every push. Exit status 2 is a hit:
+  stop and report it.
+- A branch or PR head written elsewhere is scanned before it is checked
+  out, built, tested or opened in an editor.
+- JS installs run with `--ignore-scripts` against the committed lockfile.
+- Nothing downloaded is run unread; binaries are checked against signed
+  checksums first.
+- The `Supply-chain guard` CI job scans every pull request with the base
+  branch's scanner. A red result there is a hit, not a flake.
